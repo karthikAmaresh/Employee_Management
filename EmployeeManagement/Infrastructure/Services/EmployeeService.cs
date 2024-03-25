@@ -1,10 +1,12 @@
 ﻿using Application.Commands;
 using Application.Interfaces;
+using Azure.Messaging.ServiceBus;
 using Domain.Entities;
 using MediatR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -95,6 +97,28 @@ namespace Infrastructure.Services
             }
 
         }
-  
+
+        public async Task<Unit> AddEmployeeUsingServiceBus(AddEmployeeCommand command)
+        {
+            try
+            {
+                _logger.LogInformation($"AddEmployee :Employee Service Calling Azure Func AddEmployee for employee {command.firstName} {command.lastName}");
+                var messageBody = JsonConvert.SerializeObject(command);
+
+                await using var client = new ServiceBusClient(_configuration.GetConnectionString("serviceBusConnectionString"));
+                var sender = client.CreateSender(_configuration.GetConnectionString("queueName"));
+                var message = new ServiceBusMessage(Encoding.UTF8.GetBytes(messageBody));
+                await sender.SendMessageAsync(message);
+                return Unit.Value;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogInformation($"ERROR {ex.Message} Calling AddEmployee for employee {command.firstName} {command.lastName}");
+
+                throw;
+            }
+
+        }
+
     }
 }

@@ -14,5 +14,7 @@ namespace Application.Commands
         public string company { get; set; }
         public string email { get; set; }
         public long phone { get; set; }
+
+        public int? type { get; set; }
     }
 }

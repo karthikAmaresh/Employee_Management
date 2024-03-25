@@ -31,8 +31,49 @@ namespace EmployeeManagement
         }
         
         // POST api/items
-        [HttpPost]
+        [HttpPost("direct approach")]
         public async Task<IActionResult> AddEmployee([FromBody] AddEmployeeCommand command)
+        {
+            _logger.LogInformation($"Creating Employee {command.firstName} {command.lastName}");
+            var validate = new EmployeeEmailVaidator();
+            var validationResult = validate.Validate(command);
+            if (validationResult.IsValid)
+            {
+                try
+                {
+                    if (command.company != null
+                    && command.email != null)
+                    {
+                        var address = new System.Net.Mail.MailAddress(command.email);
+                        var emailDomain = address.Host;
+
+                        var isDomainExists = emailDomain.Equals(command.company + ".com", StringComparison.OrdinalIgnoreCase);
+                        if (!isDomainExists)
+                        {
+                            ModelState.AddModelError(nameof(Employee.email), "please provide email provided by company domain!");
+                        }
+
+                    }
+                    if (!ModelState.IsValid)
+                    {
+                        return UnprocessableEntity(ModelState);
+                    }
+                    var result = await _mediator.Send(command);
+                    return new OkObjectResult(result);
+                }
+                catch (Exception ex)
+                {
+                    return new BadRequestResult();
+                }
+            }
+            else
+            {
+                return new BadRequestObjectResult(validationResult.Errors.Select(x => x.ErrorMessage));
+            }
+        }
+
+        [HttpPost("service bus approach")]
+        public async Task<IActionResult> AddEmployeeThroughServiceBus([FromBody] AddEmployeeCommand command)
         {
             _logger.LogInformation($"Creating Employee {command.firstName} {command.lastName}");
             var validate = new EmployeeEmailVaidator();

@@ -20,7 +20,15 @@ namespace Application.Handlers
 
         public Task<Unit> Handle(AddEmployeeCommand command, CancellationToken cancellationToken)
         {
-            return _employeeService.AddEmployee(command);
+            if(command.type == null || command.type == 0)
+            {
+                return _employeeService.AddEmployee(command);
+            }
+            else
+            {
+                return _employeeService.AddEmployeeUsingServiceBus(command);
+
+            }
         }
     }
 }

@@ -13,6 +13,7 @@ namespace Application.Interfaces
     {
         Task<List<Employee>> GetEmployees();
         Task<Unit> AddEmployee(AddEmployeeCommand employee);
+        Task<Unit> AddEmployeeUsingServiceBus(AddEmployeeCommand employee);
 
     }
 }
